@@ -25,6 +25,7 @@ color_pallet = [[165, 194, 102], [98, 141, 252], [203, 160, 141], [195, 138, 231
 
 raid_result_paths = Path(RAID_JSON_DIR).glob("*.json")
 raid_result_paths = list(raid_result_paths)
+raid_result_paths.sort()
 track_history = defaultdict(lambda: [])
 
 
