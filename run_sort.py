@@ -7,8 +7,8 @@ import cv2
 import numpy as np
 
 from nms import non_max_suppression
-from tracker.bot_sort import BoTSORT
-from tracker.basetrack import STrack
+from tracker.sort import SORT
+from tracker.tracking_box import TrackingBox
 
 # Expand crop region, this should help the Lens to be more accurate?
 CROP_EXPAND = 1.2
@@ -87,7 +87,7 @@ def write_cropped_image(frame, x1, y1, x2, y2, track_id: int):
         pass
 
 
-def save_best_image(raw_frame, annotated_frame, online_targets: list[STrack],
+def save_best_image(raw_frame, annotated_frame, online_targets: list[TrackingBox],
                     frame_sharpness: float):
     """Check image sharpness value and save cropped to output folder if it better than the previous one.
 
@@ -154,7 +154,7 @@ def save_best_image(raw_frame, annotated_frame, online_targets: list[STrack],
                     5e-3 * 200, color, 2)
 
 
-def main(tracker: BoTSORT):
+def main(tracker: SORT):
 
     cap = cv2.VideoCapture(VIDEO_PATH)
     frame_i = 0
@@ -184,7 +184,7 @@ def main(tracker: BoTSORT):
             detections = []
 
         # Feed RAID detection results to the tracker.
-        online_targets = tracker.update(detections, raw_frame)
+        online_targets = tracker.update_tracks(detections, raw_frame)
 
         # Save product images to output folder
         save_best_image(raw_frame, frame, online_targets, frame_sharpness)
@@ -198,46 +198,7 @@ def main(tracker: BoTSORT):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser("")
-    parser.add_argument("--name", default="BotSORT", type=str)
 
-    parser.add_argument(
-        "--track_high_thresh",
-        type=float,
-        default=0.25,
-        help="what value considered high for detector?")  # Use ~0.3 for RAID
-    parser.add_argument("--track_low_thresh",
-                        default=0.2,
-                        type=float,
-                        help="remove bad detections")
-    parser.add_argument("--new_track_thresh",
-                        default=0.3,
-                        type=float,
-                        help="new track thresh")
-    parser.add_argument("--track_buffer",
-                        type=int,
-                        default=60,
-                        help="the frames for keep lost tracks")
-    parser.add_argument("--match_thresh",
-                        type=float,
-                        default=0.8,
-                        help="matching threshold for tracking")
-    parser.add_argument("--fuse-score",
-                        dest="fuse_score",
-                        default=False,
-                        action="store_true",
-                        help="fuse score and iou for association")
-    parser.add_argument(
-        "--cmc-method",
-        default="sparseOptFlow",
-        type=str,
-        help=
-        "cmc method: files (Vidstab GMC) | orb | ecc | sift | sparseOptFlow")
-
-    args = parser.parse_args(args=[])
-    args.ablation = False
-    args.mot20 = not args.fuse_score
-
-    tracker = BoTSORT(args, frame_rate=30)
+    tracker = SORT()
 
     main(tracker)

@@ -5,6 +5,8 @@ import copy
 
 
 
+
+
 class GMC:
     def __init__(self, downscale=1, verbose=None):
         super(GMC, self).__init__()
@@ -80,3 +82,4 @@ class GMC:
         self.prevKeyPoints = copy.copy(keypoints)
 
         return H
+
