@@ -183,6 +183,7 @@ def main(tracker: SORT):
         else:
             detections = []
 
+     
         # Feed RAID detection results to the tracker.
         online_targets = tracker.update_tracks(detections, raw_frame)
 

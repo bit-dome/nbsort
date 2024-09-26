@@ -70,43 +70,28 @@ def nb_box_ious(
     return overlaps
 
 
-def ious(atlbrs, btlbrs):
-    """
-    Compute cost based on IoU
-    :type atlbrs: list[tlbr] | np.ndarray
-    :type atlbrs: list[tlbr] | np.ndarray
+def calculate_ious(a_bounding_boxes, b_bounding_boxes):
+    iou_matrix = np.zeros((len(a_bounding_boxes), len(b_bounding_boxes)), dtype=float)
+    if iou_matrix.size == 0:
+        return iou_matrix
 
-    :rtype ious np.ndarray
-    """
-    ious = np.zeros((len(atlbrs), len(btlbrs)), dtype=float)
-    if ious.size == 0:
-        return ious
-
-    ious = nb_box_ious(
-        np.ascontiguousarray(atlbrs, dtype=float),
-        np.ascontiguousarray(btlbrs, dtype=float)
+    iou_matrix = nb_box_ious(
+        np.ascontiguousarray(a_bounding_boxes, dtype=float),
+        np.ascontiguousarray(b_bounding_boxes, dtype=float)
     )
 
-    return ious
+    return iou_matrix
 
 
-
-def iou_distance(atracks, btracks):
-    """
-    Compute cost based on IoU
-    :type atracks: list[STrack] tracks
-    :type btracks: list[STrack] new detections
-
-    :rtype cost_matrix np.ndarray
-    """
-
-    if (len(atracks)>0 and isinstance(atracks[0], np.ndarray)) or (len(btracks) > 0 and isinstance(btracks[0], np.ndarray)):
-        atlbrs = atracks
-        btlbrs = btracks
+def iou_distance(a_tracks, b_tracks):
+    if (len(a_tracks) > 0 and isinstance(a_tracks[0], np.ndarray)) or (len(b_tracks) > 0 and isinstance(b_tracks[0], np.ndarray)):
+        a_bounding_boxes = a_tracks
+        b_bounding_boxes = b_tracks
     else:
-        atlbrs = [track.tlbr for track in atracks]
-        btlbrs = [track.tlbr for track in btracks]
-    _ious = ious(atlbrs, btlbrs)
-    cost_matrix = 1 - _ious
+        a_bounding_boxes = [track.tlbr for track in a_tracks]
+        b_bounding_boxes = [track.tlbr for track in b_tracks]
+
+    iou_matrix = calculate_ious(a_bounding_boxes, b_bounding_boxes)
+    cost_matrix = 1 - iou_matrix
 
     return cost_matrix

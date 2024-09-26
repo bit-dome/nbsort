@@ -89,7 +89,6 @@ class TrackingBox():
 
 
     def activate(self, frame_id, track_id):
-        """Start a new tracklet"""
         self.track_id = track_id
 
         self._xywh = self.tlwh_to_xywh(self._tlwh)
@@ -115,13 +114,6 @@ class TrackingBox():
         self.score = new_track.score
 
     def update(self, new_track, frame_id):
-        """
-        Update a matched track
-        :type new_track: STrack
-        :type frame_id: int
-        :type update_feature: bool
-        :return:
-        """
         self.frame_id = frame_id
         self.tracklet_len += 1
 
@@ -140,9 +132,6 @@ class TrackingBox():
 
     @property
     def tlwh(self):
-        """Get current position in bounding box format `(top left x, top left y,
-                width, height)`.
-        """
         if self._xywh is None:
             return self._tlwh.copy()
         ret = self._xywh[:4].copy()
@@ -151,37 +140,20 @@ class TrackingBox():
 
     @property
     def tlbr(self):
-        """Convert bounding box to format `(min x, min y, max x, max y)`, i.e.,
-        `(top left, bottom right)`.
-        """
+        # top left, bottom right   
         ret = self.tlwh.copy()
         ret[2:] += ret[:2]
         return ret
 
     @property
     def xywh(self):
-        """Convert bounding box to format `(min x, min y, max x, max y)`, i.e.,
-        `(top left, bottom right)`.
-        """
         ret = self.tlwh.copy()
         ret[:2] += ret[2:] / 2.0
         return ret
 
-    @staticmethod
-    def tlwh_to_xyah(tlwh):
-        """Convert bounding box to format `(center x, center y, aspect ratio,
-        height)`, where the aspect ratio is `width / height`.
-        """
-        ret = np.asarray(tlwh).copy()
-        ret[:2] += ret[2:] / 2
-        ret[2] /= ret[3]
-        return ret
 
     @staticmethod
     def tlwh_to_xywh(tlwh):
-        """Convert bounding box to format `(center x, center y, width,
-        height)`.
-        """
         ret = np.asarray(tlwh).copy()
         ret[:2] += ret[2:] / 2
         return ret
@@ -189,17 +161,3 @@ class TrackingBox():
     def to_xywh(self):
         return self.tlwh_to_xywh(self.tlwh)
 
-    @staticmethod
-    def tlbr_to_tlwh(tlbr):
-        ret = np.asarray(tlbr).copy()
-        ret[2:] -= ret[:2]
-        return ret
-
-    @staticmethod
-    def tlwh_to_tlbr(tlwh):
-        ret = np.asarray(tlwh).copy()
-        ret[2:] += ret[:2]
-        return ret
-
-    def __repr__(self):
-        return 'OT_{}_({}-{})'.format(self.track_id, self.start_frame, self.end_frame)

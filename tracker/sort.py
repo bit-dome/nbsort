@@ -48,12 +48,12 @@ class SORT(object):
 
 
 
-    def parse_detections(self, output_results):
-        if len(output_results) == 0:
+    def parse_detections(self, current_detections):
+        if len(current_detections) == 0:
             return [], [], [], []
 
-        bboxes = output_results[:, :4]
-        scores = output_results[:, 4]
+        bboxes = current_detections[:, :4]
+        scores = current_detections[:, 4]
 
         # Filter out low-scoring detections
         valid_inds = scores > self.track_low_thresh
@@ -72,12 +72,12 @@ class SORT(object):
 
 
 
-    def update_tracks(self, output_results, img):
+    def update_tracks(self, current_detections, img):
         self.frame_id += 1
         activated_tracks, refound_tracks, lost_tracks, removed_tracks = [], [], [], []
 
         # Parse detections
-        detections, bboxes, dets, scores = self.parse_detections(output_results)
+        detections, bboxes, dets, scores = self.parse_detections(current_detections)
 
         # Step 1: Separate confirmed and unconfirmed tracks
         unconfirmed_tracks = [track for track in self.tracked_stracks if not track.is_activated]
@@ -189,7 +189,6 @@ class SORT(object):
 
 
     def handle_unconfirmed(self, detections, unconfirmed, remain_det_1, activated_starcks, removed_stracks):
-        '''Deal with unconfirmed tracks, usually tracks with only one beginning frame'''
         detections = [detections[i] for i in remain_det_1]
         ious_dists = matching.iou_distance(unconfirmed, detections)
 
