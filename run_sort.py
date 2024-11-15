@@ -200,6 +200,6 @@ def main(tracker: SORT):
 
 if __name__ == '__main__':
 
-    tracker = SORT()
+    tracker = SORT(use_kalman=False, use_gmc=True)
 
     main(tracker)

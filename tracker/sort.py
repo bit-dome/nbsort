@@ -3,7 +3,8 @@ import numpy as np
 
 from tracker import matching
 from tracker.gmc import GMC
-from tracker.tracking_box import TrackingBoxState, TrackingBox, multi_gmc
+from tracker.tracking_box import TrackingBoxState, TrackingBox, multi_gmc, multi_predict
+from tracker.kalman_filter import KalmanFilter
 
 
 
@@ -17,6 +18,8 @@ def tlbr_to_tlwh(tlbr):
 class SORT(object):
 
     def __init__(self, 
+                 use_kalman,
+                 use_gmc,
                  track_high_thresh=0.25,
                  track_low_thresh=0.2,
                  new_track_thresh=0.3,
@@ -43,8 +46,20 @@ class SORT(object):
         self.buffer_size = int(frame_rate / 30.0 * track_buffer_frames)
         self.max_time_lost = self.buffer_size
 
+        self.use_kalman = use_kalman
+        self.use_gmc = use_gmc
+        
+        if (self.use_kalman):
+            self.kalman_filter = KalmanFilter()
+        else: 
+            self.kalman_filter = None
 
-        self.gmc = GMC()
+        if (self.use_gmc):
+            self.gmc = GMC()
+        else:
+            self.gmc = None
+
+
 
 
 
@@ -85,9 +100,14 @@ class SORT(object):
 
         # Step 2: Jointly manage the track pool and apply camera motion correction
         track_pool = joint_stracks(confirmed_tracks, self.lost_stracks)
-        warped_image = self.gmc.apply(img, dets)
-        multi_gmc(track_pool, warped_image)
-        multi_gmc(unconfirmed_tracks, warped_image)
+
+        if (self.use_kalman):
+            multi_predict(track_pool)
+
+        if (self.use_gmc):    
+            warped_image = self.gmc.apply(img, dets)
+            multi_gmc(track_pool, warped_image)
+            multi_gmc(unconfirmed_tracks, warped_image)
 
         # Associate high-score detection boxes with tracked tracks
         iou_distances = matching.iou_distance(track_pool, detections)
@@ -172,7 +192,8 @@ class SORT(object):
             if track.score < self.new_track_thresh:
                 continue
 
-            track.activate(self.frame_id, self.next_track_id)
+            track.activate(self.kalman_filter, self.frame_id, self.next_track_id)
+
             self.next_track_id += 1
             activated_starcks.append(track)
 
